@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "exactOptionalPropertyTypes": true,
+    "lib": [
+      "deno.window",
+      "deno.unstable"
+    ]
+  },
+  "fmt": {
+    "indentWidth": 2,
+    "lineWidth": 90,
+    "proseWrap": "preserve",
+    "semiColons": true,
+    "singleQuote": false,
+    "useTabs": false
+  },
+  "importMap": "./import-map.json",
+  "tasks": {
+    "test": "deno test --allow-all --unstable --allow-none --config=deno.json"
+  }
+}
