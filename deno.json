@@ -16,6 +16,9 @@
   },
   "importMap": "./import-map.json",
   "tasks": {
+    "format": "deno fmt --unstable --config=deno.json",
+    "format:check": "deno task format --check",
+    "lint": "deno lint --unstable --config=deno.json",
     "test": "deno test --allow-all --unstable --allow-none --config=deno.json"
   }
 }
