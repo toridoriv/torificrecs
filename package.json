@@ -1,0 +1,21 @@
+{
+  "name": "torificrecs",
+  "description": "Personal website to showcase fanfiction recommendations across several websites and in many different languages.",
+  "author": {
+    "name": "Tori Rodriguez",
+    "email": "vrodriguezfe@icloud.com",
+    "url": "https://github.com/toridoriv"
+  },
+  "homepage": "https://torificrecs.deno.dev",
+  "keywords": ["fanfiction", "recommendations", "deno"],
+  "bugs": {
+    "url": "https://github.com/toridoriv/torificrecs/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/toridoriv/torificrecs.git"
+  },
+  "config": {
+    "port": 3000
+  }
+}

@@ -15,10 +15,18 @@
     "useTabs": false
   },
   "importMap": "./import-map.json",
+  "lint": {
+    "rules": {
+      "exclude": [
+        "no-namespace"
+      ]
+    }
+  },
   "tasks": {
     "format": "deno fmt --unstable --config=deno.json",
     "format:check": "deno task format --check",
     "lint": "deno lint --unstable --config=deno.json",
+    "manage": "deno run --allow-all bin/manage.ts",
     "test": "deno test --allow-all --unstable --allow-none --config=deno.json"
   }
 }
