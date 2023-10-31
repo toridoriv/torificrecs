@@ -22,3 +22,11 @@ export function capitalizeText(value: string) {
     })
     .trim();
 }
+
+export function replaceAt(value: string, index: number, replacement: string, length = 1) {
+  return value.substring(0, index) + replacement + value.substring(index + length);
+}
+
+export function insertAt(value: string, index: number, replacement: string) {
+  return value.substring(0, index) + replacement + value.substring(index);
+}
