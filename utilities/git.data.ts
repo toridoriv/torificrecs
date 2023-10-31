@@ -517,6 +517,12 @@ export const DEFAULT_EMOJI_GROUP = {
   emojis: [] as string[],
 };
 
+export const RELEASE_EMOJI_GROUP = {
+  group: "release",
+  label: "Release" as const,
+  emojis: ["bookmark"],
+};
+
 export const EMOJI_MAP = [
   {
     group: "added",
@@ -592,9 +598,5 @@ export const EMOJI_MAP = [
     label: "Security" as const,
     emojis: ["lock"],
   },
-  {
-    group: "release",
-    label: "Release" as const,
-    emojis: ["bookmark"],
-  },
+  RELEASE_EMOJI_GROUP,
 ];

@@ -1,8 +1,13 @@
-import { createCommit, getGitLogOutput } from "@utilities/git.seeds.ts";
+import {
+  createCommit,
+  createReleaseCommit,
+  getGitLogOutput,
+} from "@utilities/git.seeds.ts";
 import {
   compareCommitsByTimestamp,
-  getCommitGroup,
-  getUnreleasedCommits,
+  extractVersionFromCommit,
+  getCommitLabel,
+  getReleaseObject,
   parseGitLogOutput,
 } from "@utilities/git.ts";
 import { expect } from "chai";
@@ -46,33 +51,14 @@ describe("function compareCommitsByTimestamp", () => {
   });
 });
 
-describe("function getUntaggedCommits", () => {
-  it("should only return commits that are not associated to a git tag", () => {
-    const commits = [
-      createCommit({
-        timestamp: new Date("2023-01-01T23:00:00.000Z"),
-        ref: "tag: v1.0.0",
-      }),
-      createCommit({ timestamp: new Date("2023-01-01T12:10:00.000Z") }),
-      createCommit({ timestamp: new Date("2023-01-01T12:10:01.000Z") }),
-      createCommit({ timestamp: new Date("2023-01-02T10:00:00.000Z") }),
-      createCommit({ timestamp: new Date("2023-01-03T11:00:00.000Z") }),
-    ];
-
-    const unreleasedCommits = getUnreleasedCommits(commits);
-
-    expect(unreleasedCommits).to.have.members(commits.slice(3));
-  });
-});
-
-describe("function getCommitGroup", () => {
+describe("function getCommitLabel", () => {
   it("should return `Added` if the commit subject includes an emoji belonging to that group", () => {
     const commits = [
       ":sparkles: Message",
       ":tada: (scope) Message",
       ":construction_worker: (scope) Message (#1)",
     ];
-    const groups = commits.map(getCommitGroup);
+    const groups = commits.map(getCommitLabel);
 
     expect(groups).to.eql(["Added", "Added", "Added"]);
   });
@@ -83,7 +69,7 @@ describe("function getCommitGroup", () => {
       ":bento: (scope) Message",
       ":building_construction: (scope) Message (#1)",
     ];
-    const groups = commits.map(getCommitGroup);
+    const groups = commits.map(getCommitLabel);
 
     expect(groups).to.eql(["Changed", "Changed", "Changed"]);
   });
@@ -94,7 +80,7 @@ describe("function getCommitGroup", () => {
       ":boom: (scope) Message",
       ":boom: (scope) Message (#1)",
     ];
-    const groups = commits.map(getCommitGroup);
+    const groups = commits.map(getCommitLabel);
 
     expect(groups).to.eql(["Breaking Changes", "Breaking Changes", "Breaking Changes"]);
   });
@@ -105,7 +91,7 @@ describe("function getCommitGroup", () => {
       ":wastebasket: (scope) Message",
       ":wastebasket: (scope) Message (#1)",
     ];
-    const groups = commits.map(getCommitGroup);
+    const groups = commits.map(getCommitLabel);
 
     expect(groups).to.eql(["Deprecated", "Deprecated", "Deprecated"]);
   });
@@ -116,7 +102,7 @@ describe("function getCommitGroup", () => {
       ":heavy_minus_sign: (scope) Message",
       ":mute: (scope) Message (#1)",
     ];
-    const groups = commits.map(getCommitGroup);
+    const groups = commits.map(getCommitLabel);
 
     expect(groups).to.eql(["Removed", "Removed", "Removed"]);
   });
@@ -127,7 +113,7 @@ describe("function getCommitGroup", () => {
       ":apple: (scope) Message",
       ":pencil2: (scope) Message (#1)",
     ];
-    const groups = commits.map(getCommitGroup);
+    const groups = commits.map(getCommitLabel);
 
     expect(groups).to.eql(["Fixed", "Fixed", "Fixed"]);
   });
@@ -138,7 +124,7 @@ describe("function getCommitGroup", () => {
       ":lock: (scope) Message",
       ":lock: (scope) Message (#1)",
     ];
-    const groups = commits.map(getCommitGroup);
+    const groups = commits.map(getCommitLabel);
 
     expect(groups).to.eql(["Security", "Security", "Security"]);
   });
@@ -149,7 +135,7 @@ describe("function getCommitGroup", () => {
       ":bookmark: (scope) Message",
       ":bookmark: (scope) Message (#1)",
     ];
-    const groups = commits.map(getCommitGroup);
+    const groups = commits.map(getCommitLabel);
 
     expect(groups).to.eql(["Release", "Release", "Release"]);
   });
@@ -160,8 +146,49 @@ describe("function getCommitGroup", () => {
       ":cold_face: (scope) Message",
       ":rainbow_flag: (scope) Message (#1)",
     ];
-    const groups = commits.map(getCommitGroup);
+    const groups = commits.map(getCommitLabel);
 
     expect(groups).to.eql(["Miscellaneous", "Miscellaneous", "Miscellaneous"]);
   });
 });
+
+describe("function extractVersionFromCommit", () => {
+  it("should return a valid semantic version given a commit object", () => {
+    const patch = createCommit({ ref: "tag: v1.0.1" });
+    const minor = createCommit({ ref: "tag: v1.1.0" });
+    const major = createCommit({ ref: "tag: v1.0.0" });
+
+    expect(extractVersionFromCommit(patch)).to.equal("1.0.1");
+    expect(extractVersionFromCommit(minor)).to.equal("1.1.0");
+    expect(extractVersionFromCommit(major)).to.equal("1.0.0");
+  });
+});
+
+describe("function getReleaseObject", () => {
+  const commitsBeforeRelease = getListOfConsecutiveCommits();
+  const commitsAfterRelease = [
+    ...commitsBeforeRelease,
+    createReleaseCommit("0.1.0"),
+  ];
+  const firstRelease = getReleaseObject("0.1.0", commitsBeforeRelease);
+  const secondRelease = getReleaseObject("1.0.0", commitsAfterRelease);
+  const withFixes = getReleaseObject("1.0.0", [
+    createCommit({ subject: ":bug: Fix some bugaroo" }),
+  ]);
+
+  it("should have the property `previous` set as the hash of the first commit", () => {
+    expect(firstRelease.previous).to.equal(commitsBeforeRelease[0].hash);
+  });
+
+  it("should have the property `previous` set as a previous version when there is one", () => {
+    expect(secondRelease.previous).to.equal("0.1.0");
+  });
+
+  it("should push each commit into its corresponding commit group", () => {
+    expect(withFixes.changes.Fixed.commits.length).to.equal(1);
+  });
+});
+
+function getListOfConsecutiveCommits(length = 4) {
+  return Array.from({ length }, () => createCommit({ timestamp: new Date() }));
+}

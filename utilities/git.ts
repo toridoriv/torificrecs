@@ -1,6 +1,6 @@
 import { DEFAULT_EMOJI_GROUP, EMOJI_MAP } from "@utilities/git.data.ts";
 import { executeCommand } from "@utilities/process.ts";
-import { groupBy } from "std/collections/group_by.ts";
+import { Expand } from "@utilities/types.ts";
 import { z } from "zod";
 
 const commitFormat = {
@@ -59,6 +59,20 @@ export type CommitLabel =
   | (typeof EMOJI_MAP)[number]["label"]
   | (typeof DEFAULT_EMOJI_GROUP)["label"];
 
+export type UnreleasedCommitLabel = Exclude<CommitLabel, "Release">;
+
+export type CommitLabelObject = { label: CommitLabel };
+
+export type LabeledCommit = Expand<Commit & CommitLabelObject>;
+
+export type ReleaseChanges = Expand<CommitLabelObject & { commits: Commit[] }>;
+
+export type NextRelease = {
+  version: string;
+  previous?: string | null;
+  changes: Record<UnreleasedCommitLabel, ReleaseChanges>;
+};
+
 /**
  * Parses the output of `git log` into a list of {@link Commit} objects.
  *
@@ -91,31 +105,6 @@ export function compareCommitsByTimestamp(a: Commit, b: Commit) {
 }
 
 /**
- * Gets all commits from the provided list that are not associated with a git tag.
- *
- * Sorts the commits from newest to oldest, then iterates through looking for the first tagged commit.
- * Returns all commits up to the first tagged one.
- *
- * Useful for getting a list of commits since the last release.
- */
-export function getUnreleasedCommits(commits: Commit[]) {
-  const sortedDesc = commits.sort(compareCommitsByTimestamp).toReversed();
-  const untagged = [] as Commit[];
-
-  for (let i = 0; i < sortedDesc.length; i++) {
-    const commit = sortedDesc[i];
-
-    if (commit.ref.includes("tag")) {
-      return untagged;
-    }
-
-    untagged.push(commit);
-  }
-
-  return untagged;
-}
-
-/**
  * Gets the commit group label for the given commit subject.
  *
  * Extracts the emoji from the commit subject and looks it up
@@ -125,7 +114,7 @@ export function getUnreleasedCommits(commits: Commit[]) {
  * @param subject - The commit subject to get the group label for
  * @returns The commit group label
  */
-export function getCommitGroup(subject: string): CommitLabel {
+export function getCommitLabel(subject: string): CommitLabel {
   const emojiMatch = subject.match(/:\w+:/);
 
   if (emojiMatch === null) {
@@ -146,14 +135,71 @@ export function getCommitGroup(subject: string): CommitLabel {
 }
 
 /**
- * Retrieves all commits since the last version tag, groups them by its commit type, and returns the grouped commits.
+ * Initializes a release object with the given version and previous version.
  *
- * Executes `git log` to get all commits, parses the output, filters to only unreleased commits, adds a label based on the commit emoji,
- * groups the labeled commits, and returns the grouped commits.
- *
- * Used to generate the commit info for the next version's changelog.
+ * @param version - The version string for the current release
+ * @param previous - The previous release version string, if available
+ * @returns An object representing the release with default values
  */
-export function retrieveCommitsForNextVersion() {
+export function initReleaseObject(
+  version: string,
+  previous: string | null = null,
+): NextRelease {
+  return {
+    version,
+    previous,
+    changes: {
+      "Breaking Changes": {
+        label: "Breaking Changes",
+        commits: [],
+      },
+      "Added": {
+        label: "Added",
+        commits: [],
+      },
+      "Security": {
+        label: "Security",
+        commits: [],
+      },
+      "Fixed": {
+        label: "Fixed",
+        commits: [],
+      },
+      "Removed": {
+        label: "Removed",
+        commits: [],
+      },
+      "Deprecated": {
+        label: "Deprecated",
+        commits: [],
+      },
+      "Changed": {
+        label: "Changed",
+        commits: [],
+      },
+      "Miscellaneous": {
+        label: "Miscellaneous",
+        commits: [],
+      },
+    },
+  };
+}
+
+/**
+ * Extracts the semantic version string from a Git commit reference.
+ */
+export function extractVersionFromCommit(commit: Commit) {
+  return commit.ref.replace("tag: v", "");
+}
+
+/**
+ * Retrieves all commits from the Git repository, sorted chronologically.
+ *
+ * Executes the `git log` command to get the full commit history. The commit
+ * messages are formatted as JSON for easy parsing. The output is then parsed
+ * and the commits sorted by timestamp before being returned.
+ */
+export function retrieveAllCommits() {
   const output = executeCommand("git", {
     args: [
       "log",
@@ -163,14 +209,63 @@ export function retrieveCommitsForNextVersion() {
       `--pretty=format:${JSON.stringify(commitFormat)}`,
     ],
   });
-  const allCommits = parseGitLogOutput(output).sort(compareCommitsByTimestamp);
-  const unreleased = getUnreleasedCommits(allCommits).map(addGroupLabel);
-  const grouped = groupBy(unreleased, (c) => c.label);
 
-  return Object.entries(grouped).map(([kind, commits]) => ({
-    kind: kind as CommitLabel,
-    commits,
-  }));
+  return parseGitLogOutput(output).sort(compareCommitsByTimestamp);
+}
+
+/**
+ * Retrieves the first commit from the Git repository.
+ *
+ * Executes the `git log` command with first-parent and sorting options
+ * to get the very first commit in the history. The commit message is
+ * formatted as JSON for easy parsing. The output is parsed and the
+ * first (oldest) commit is returned.
+ */
+export function retrieveFirstCommit() {
+  const output = executeCommand("git", {
+    args: [
+      "log",
+      "--first-parent",
+      "--date=format:%s",
+      `--pretty=format:${JSON.stringify(commitFormat)}`,
+    ],
+  });
+
+  return parseGitLogOutput(output).sort(compareCommitsByTimestamp).toReversed()[0];
+}
+
+/**
+ * Constructs a release object for the provided version and list of commits.
+ *
+ * The release object contains the version, previous version, and categorized
+ * changes with associated commits. Commits are scanned to find the previous
+ * version tag and categorized based on commit subject.
+ *
+ * @param version - The version string for this release object.
+ * @param commits - The list of commits to categorize.
+ * @returns The constructed release object.
+ */
+export function getReleaseObject(version: string, commits: Commit[]) {
+  const release = initReleaseObject(version);
+
+  for (let i = 0; i < commits.length; i++) {
+    const commit = commits[i];
+    const label = getCommitLabel(commit.subject);
+
+    if (label === "Release") {
+      release.previous = extractVersionFromCommit(commit);
+      break;
+    }
+
+    release.changes[label].commits.push(commit);
+  }
+
+  if (release.previous === null) {
+    const firstCommit = retrieveFirstCommit();
+    release.previous = firstCommit.hash;
+  }
+
+  return release;
 }
 
 function parseCommit(rawCommit: unknown) {
@@ -185,11 +280,4 @@ function parseDate(date: unknown) {
   }
 
   return date;
-}
-
-function addGroupLabel(commit: Commit): Commit & { label: CommitLabel } {
-  return {
-    ...commit,
-    label: getCommitGroup(commit.subject),
-  };
 }
