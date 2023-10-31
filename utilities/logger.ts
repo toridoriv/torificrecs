@@ -1,4 +1,5 @@
 import { config } from "@config";
+import { LoggerConfig } from "@utilities/logger.config.ts";
 import type { SafeAny } from "@utilities/types.ts";
 import ansicolors from "ansi-colors";
 import { deepMerge } from "std/collections/deep_merge.ts";
@@ -9,155 +10,6 @@ import {
   isRedirectStatus,
   isSuccessfulStatus,
 } from "std/http/mod.ts";
-import { z } from "zod";
-
-const SeverityName = {
-  Silent: "SILENT",
-  Debug: "DEBUG",
-  Informational: "INFORMATIONAL",
-  Warning: "WARNING",
-  Error: "ERROR",
-} as const;
-
-const SeverityNameSchema = z.nativeEnum(SeverityName);
-
-type SeverityName = z.output<typeof SeverityNameSchema>;
-
-const SeverityLevel = {
-  [SeverityName.Silent]: 0,
-  [SeverityName.Debug]: 1,
-  [SeverityName.Informational]: 2,
-  [SeverityName.Warning]: 3,
-  [SeverityName.Error]: 4,
-} as const;
-
-const SeverityLevelSchema = z.nativeEnum(SeverityLevel);
-
-type SeverityLevel = z.output<typeof SeverityLevelSchema>;
-
-const SeverityNameByLevel = {
-  [SeverityLevel[SeverityName.Silent]]: SeverityName.Silent,
-  [SeverityLevel[SeverityName.Debug]]: SeverityName.Debug,
-  [SeverityLevel[SeverityName.Informational]]: SeverityName.Informational,
-  [SeverityLevel[SeverityName.Warning]]: SeverityName.Warning,
-  [SeverityLevel[SeverityName.Error]]: SeverityName.Error,
-} as const;
-
-const LevelName = {
-  Error: "ERROR",
-  Warn: "WARN",
-  Info: "INFO",
-  Http: "HTTP",
-  Debug: "DEBUG",
-} as const;
-
-const LevelNameSchema = z.nativeEnum(LevelName);
-
-type LevelName = z.output<typeof LevelNameSchema>;
-
-const Mode = {
-  Pretty: "PRETTY",
-  Json: "JSON",
-} as const;
-
-const ModeSchema = z.nativeEnum(Mode);
-
-type Mode = z.output<typeof ModeSchema>;
-
-const TransportSchema = z
-  .function()
-  .returns(z.void());
-
-const TransportsSchema = z.object({
-  [SeverityName.Silent]: TransportSchema,
-  [SeverityName.Debug]: TransportSchema,
-  [SeverityName.Informational]: TransportSchema,
-  [SeverityName.Warning]: TransportSchema,
-  [SeverityName.Error]: TransportSchema,
-});
-
-const TransportDefaults = {
-  [SeverityName.Silent]: doNothing,
-  [SeverityName.Debug]: console.debug,
-  [SeverityName.Informational]: console.info,
-  [SeverityName.Warning]: console.warn,
-  [SeverityName.Error]: console.error,
-};
-
-const sharedTemplate = `${
-  ansicolors.bold.dim(
-    "{@timestamp}",
-  )
-} {log.level} [${ansicolors.bold.white("{log.logger}")}]`;
-
-const prettyTemplate = `${sharedTemplate} ${
-  ansicolors.dim(
-    "{log.origin.file.path}:{log.origin.file.line}:{log.origin.file.column}",
-  )
-} ${ansicolors.yellow("{message}")} {data}`;
-
-const prettyHttpTemplate = `${sharedTemplate} "${
-  ansicolors.bold.greenBright(
-    "{http.request.method} {http.request.url.original}",
-  )
-} ${
-  ansicolors.bold.green.dim(
-    "HTTP/{http.version}",
-  )
-}" {http.response.status_code} ${ansicolors.bold.dim("{event.duration}ms")}`;
-
-const prettyErrorTemplate = `${sharedTemplate} ${
-  ansicolors.dim(
-    "{log.origin.file.path}:{log.origin.file.line}:{log.origin.file.column}",
-  )
-} ${ansicolors.yellow("{message}")}\n${ansicolors.bold.bgRed("{error.id}")}: ${
-  ansicolors.bold("{error.message}")
-} {error.stack_trace}`;
-
-const Theme = {
-  [LevelName.Error]: ansicolors.bold.red,
-  [LevelName.Warn]: ansicolors.bold.yellow,
-  [LevelName.Info]: ansicolors.bold.green,
-  [LevelName.Http]: ansicolors.bold.cyan,
-  [LevelName.Debug]: ansicolors.bold.blue,
-} as const;
-
-const HttpStatusTheme = {
-  Informational: ansicolors.bold.cyan,
-  Successful: ansicolors.bold.cyan,
-  Redirection: ansicolors.bold.yellow,
-  Error: ansicolors.bold.red,
-  Default: ansicolors.bold,
-} as const;
-
-const SettingsSchema = z.object({
-  severity: SeverityNameSchema,
-  application: z.string(),
-  environment: z.string(),
-  module: z.string().optional(),
-  id: z.string().optional(),
-  version: z.string().optional(),
-  padding: z
-    .number()
-    .int()
-    .default(LevelName.Debug.length + 1),
-  mode: ModeSchema,
-  transports: TransportsSchema.default(TransportDefaults),
-  prettyTemplate: z.string().default(prettyTemplate),
-  prettyErrorTemplate: z.string().default(prettyErrorTemplate),
-  prettyHttpTemplate: z.string().default(prettyHttpTemplate),
-  inspectOptions: z.custom<Deno.InspectOptions>().default({
-    colors: true,
-  }),
-});
-
-type SettingsInput = z.input<typeof SettingsSchema>;
-
-type Settings = z.output<typeof SettingsSchema>;
-
-function doNothing(..._: SafeAny[]) {
-  return;
-}
 
 namespace LogObject {
   export type Error = {
@@ -192,7 +44,7 @@ class LogObject {
   #response?: LogObject.Response;
 
   readonly "@timestamp" = format(new Date(), "yyyy-MM-dd HH:mm:ss.SSS");
-  public "log.level": LevelName = "" as LevelName;
+  public "log.level": LoggerConfig.LevelName = "" as LoggerConfig.LevelName;
   public message = "";
   public data: LogObject.OptionalField<Array<unknown>> = undefined;
   public labels: LogObject.OptionalField<Record<string, string>> = undefined;
@@ -273,7 +125,7 @@ class LogObject {
     return this;
   }
 
-  public setLogFields(level: LevelName, logger: string) {
+  public setLogFields(level: LoggerConfig.LevelName, logger: string) {
     const origin = getLastFileStack(
       this.#error instanceof Error ? this.#error : undefined,
     );
@@ -376,18 +228,18 @@ type LogOptions = {
 };
 
 abstract class BaseLogger {
-  public settings: Settings;
-  public severityLevel: SeverityLevel;
+  public settings: LoggerConfig.Settings;
+  public severityLevel: LoggerConfig.SeverityLevel;
 
-  constructor(settings: SettingsInput) {
-    this.settings = SettingsSchema.parse(settings);
-    this.severityLevel = SeverityLevel[this.settings.severity];
+  constructor(settings: LoggerConfig.SettingsInput) {
+    this.settings = LoggerConfig.SettingsSchema.parse(settings);
+    this.severityLevel = LoggerConfig.SeverityLevel[this.settings.severity];
   }
 
   protected abstract format(logObject: LogObject): string;
 
-  protected isSilentMode(severity: SeverityLevel) {
-    if (this.settings.severity === SeverityName.Silent) {
+  protected isSilentMode(severity: LoggerConfig.SeverityLevel) {
+    if (this.settings.severity === LoggerConfig.SeverityName.Silent) {
       return true;
     }
 
@@ -395,8 +247,8 @@ abstract class BaseLogger {
   }
 
   protected log(
-    severity: SeverityLevel,
-    level: LevelName,
+    severity: LoggerConfig.SeverityLevel,
+    level: LoggerConfig.LevelName,
     options: LogOptions,
   ) {
     if (this.isSilentMode(severity)) {
@@ -424,7 +276,8 @@ abstract class BaseLogger {
       );
 
     const formatted = this.format(logObject);
-    const transport = this.settings.transports[SeverityNameByLevel[severity]];
+    const transport =
+      this.settings.transports[LoggerConfig.SeverityNameByLevel[severity]];
 
     transport(formatted);
 
@@ -432,32 +285,46 @@ abstract class BaseLogger {
   }
 
   public debug(message: string, ...args: unknown[]) {
-    return this.log(SeverityLevel.DEBUG, LevelName.Debug, { message, args });
-  }
-
-  public info(message: string, ...args: unknown[]) {
-    return this.log(SeverityLevel.INFORMATIONAL, LevelName.Info, {
+    return this.log(LoggerConfig.SeverityLevel.DEBUG, LoggerConfig.LevelName.Debug, {
       message,
       args,
     });
   }
 
+  public info(message: string, ...args: unknown[]) {
+    return this.log(
+      LoggerConfig.SeverityLevel.INFORMATIONAL,
+      LoggerConfig.LevelName.Info,
+      {
+        message,
+        args,
+      },
+    );
+  }
+
   public http(request: LogObject.Request, response: LogObject.Response) {
-    return this.log(SeverityLevel.INFORMATIONAL, LevelName.Http, {
-      request,
-      response,
-      message: "",
-    });
+    return this.log(
+      LoggerConfig.SeverityLevel.INFORMATIONAL,
+      LoggerConfig.LevelName.Http,
+      {
+        request,
+        response,
+        message: "",
+      },
+    );
   }
 
   public warn(message: string, ...args: unknown[]) {
-    return this.log(SeverityLevel.WARNING, LevelName.Warn, { message, args });
+    return this.log(LoggerConfig.SeverityLevel.WARNING, LoggerConfig.LevelName.Warn, {
+      message,
+      args,
+    });
   }
 
   public error(message: string, ...args: unknown[]) {
     const [error] = args;
 
-    return this.log(SeverityLevel.ERROR, LevelName.Error, {
+    return this.log(LoggerConfig.SeverityLevel.ERROR, LoggerConfig.LevelName.Error, {
       message,
       args,
       error: error as LogObject.Error,
@@ -465,7 +332,7 @@ abstract class BaseLogger {
   }
 
   public getSubLogger(
-    settings: Partial<SettingsInput>,
+    settings: Partial<LoggerConfig.SettingsInput>,
   ) {
     const newSettings = deepMerge(this.settings, settings);
 
@@ -516,25 +383,25 @@ class PrettyLogger extends BaseLogger {
 
   protected getStatusColor(status: number) {
     if (isErrorStatus(status)) {
-      return HttpStatusTheme.Error;
+      return LoggerConfig.HttpStatusTheme.Error;
     }
 
     if (isSuccessfulStatus(status)) {
-      return HttpStatusTheme.Successful;
+      return LoggerConfig.HttpStatusTheme.Successful;
     }
 
     if (isInformationalStatus(status)) {
-      return HttpStatusTheme.Informational;
+      return LoggerConfig.HttpStatusTheme.Informational;
     }
 
     if (isRedirectStatus(status)) {
-      return HttpStatusTheme.Redirection;
+      return LoggerConfig.HttpStatusTheme.Redirection;
     }
 
-    return HttpStatusTheme.Default;
+    return LoggerConfig.HttpStatusTheme.Default;
   }
 
-  protected getPrettyTemplate(level: LevelName, status?: number) {
+  protected getPrettyTemplate(level: LoggerConfig.LevelName, status?: number) {
     const spaces = " ".repeat(this.settings.padding - level.length);
     let template = level === "HTTP"
       ? this.settings.prettyHttpTemplate
@@ -551,7 +418,7 @@ class PrettyLogger extends BaseLogger {
 
     return template.replaceAll(
       "{log.level}",
-      Theme[level](`{log.level}${spaces}`),
+      LoggerConfig.Theme[level](`{log.level}${spaces}`),
     );
   }
 
@@ -574,23 +441,19 @@ class JsonLogger extends BaseLogger {
 
 // @ts-ignore: ¯\_(ツ)_/¯
 export class Logger extends BaseLogger {
-  public static Mode = Mode;
-  public static Level = SeverityLevel;
-  public static Severity = SeverityName;
-
-  constructor(settings: SettingsInput) {
+  constructor(settings: LoggerConfig.SettingsInput) {
     super(settings);
 
-    const parent = this.settings.mode === Mode.Pretty ? PrettyLogger : JsonLogger;
+    const parent = this.settings.mode === LoggerConfig.Mode.Pretty
+      ? PrettyLogger
+      : JsonLogger;
     Object.setPrototypeOf(this, parent.prototype);
   }
 }
 
 export const mainLogger = new Logger({
-  severity: config.env.ENVIRONMENT === "DEVELOPMENT"
-    ? Logger.Severity.Debug
-    : Logger.Severity.Informational,
-  mode: config.env.PRETTY_LOG ? Logger.Mode.Pretty : Logger.Mode.Json,
+  severity: config.logger.severity,
+  mode: config.logger.format,
   application: config.project.name,
-  environment: config.env.ENVIRONMENT,
+  environment: config.environment,
 });
