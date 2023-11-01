@@ -172,11 +172,13 @@ describe("function getReleaseObject", () => {
     ...commitsBeforeRelease,
     createReleaseCommit("0.1.0"),
   ];
-  const retrieveFirstCommitSpy = stub(
+
+  stub(
     _internals,
     "retrieveFirstCommit",
     returnsNext([commitsBeforeRelease[0], commitsBeforeRelease[0]]),
   );
+
   const firstRelease = getReleaseObject("0.1.0", commitsBeforeRelease);
   const secondRelease = getReleaseObject("1.0.0", commitsAfterRelease);
   const withFixes = getReleaseObject("1.0.0", [
