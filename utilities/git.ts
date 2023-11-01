@@ -67,10 +67,16 @@ export type LabeledCommit = Expand<Commit & CommitLabelObject>;
 
 export type ReleaseChanges = Expand<CommitLabelObject & { commits: Commit[] }>;
 
-export type NextRelease = {
+export type ReleaseObject = {
   version: string;
-  previous?: string | null;
+  tag: string;
+  previous: string;
+  previousTag: string;
   changes: Record<UnreleasedCommitLabel, ReleaseChanges>;
+};
+
+export const _internals = {
+  retrieveFirstCommit,
 };
 
 /**
@@ -141,43 +147,42 @@ export function getCommitLabel(subject: string): CommitLabel {
  * @param previous - The previous release version string, if available
  * @returns An object representing the release with default values
  */
-export function initReleaseObject(
-  version: string,
-  previous: string | null = null,
-): NextRelease {
+export function initReleaseObject(version: string, previous = ""): ReleaseObject {
   return {
     version,
+    tag: `v${version}`,
     previous,
+    previousTag: "",
     changes: {
       "Breaking Changes": {
         label: "Breaking Changes",
         commits: [],
       },
-      "Added": {
+      Added: {
         label: "Added",
         commits: [],
       },
-      "Security": {
+      Security: {
         label: "Security",
         commits: [],
       },
-      "Fixed": {
+      Fixed: {
         label: "Fixed",
         commits: [],
       },
-      "Removed": {
+      Removed: {
         label: "Removed",
         commits: [],
       },
-      "Deprecated": {
+      Deprecated: {
         label: "Deprecated",
         commits: [],
       },
-      "Changed": {
+      Changed: {
         label: "Changed",
         commits: [],
       },
-      "Miscellaneous": {
+      Miscellaneous: {
         label: "Miscellaneous",
         commits: [],
       },
@@ -231,7 +236,9 @@ export function retrieveFirstCommit() {
     ],
   });
 
-  return parseGitLogOutput(output).sort(compareCommitsByTimestamp).toReversed()[0];
+  return parseGitLogOutput(output)
+    .sort(compareCommitsByTimestamp)
+    .toReversed()[0];
 }
 
 /**
@@ -254,15 +261,17 @@ export function getReleaseObject(version: string, commits: Commit[]) {
 
     if (label === "Release") {
       release.previous = extractVersionFromCommit(commit);
+      release.previousTag = `v${release.previous}`;
       break;
     }
 
     release.changes[label].commits.push(commit);
   }
 
-  if (release.previous === null) {
-    const firstCommit = retrieveFirstCommit();
+  if (release.previous === "") {
+    const firstCommit = _internals.retrieveFirstCommit();
     release.previous = firstCommit.hash;
+    release.previousTag = firstCommit.hash;
   }
 
   return release;

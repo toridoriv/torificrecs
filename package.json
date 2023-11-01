@@ -18,5 +18,10 @@
   },
   "config": {
     "port": 3000
+  },
+  "scripts": {
+    "pretest:cov": "deno task coverage:clean",
+    "test:cov": "deno task test:cov",
+    "posttest:cov": "deno task coverage"
   }
 }

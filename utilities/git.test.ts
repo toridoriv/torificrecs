@@ -4,6 +4,7 @@ import {
   getGitLogOutput,
 } from "@utilities/git.seeds.ts";
 import {
+  _internals,
   compareCommitsByTimestamp,
   extractVersionFromCommit,
   getCommitLabel,
@@ -12,6 +13,7 @@ import {
 } from "@utilities/git.ts";
 import { expect } from "chai";
 import { describe, it } from "std/testing/bdd.ts";
+import { returnsNext, stub } from "std/testing/mock.ts";
 
 describe("function parseGitLogOutput", () => {
   const commits = Array.from({ length: 4 }, () => createCommit());
@@ -170,6 +172,11 @@ describe("function getReleaseObject", () => {
     ...commitsBeforeRelease,
     createReleaseCommit("0.1.0"),
   ];
+  const retrieveFirstCommitSpy = stub(
+    _internals,
+    "retrieveFirstCommit",
+    returnsNext([commitsBeforeRelease[0], commitsBeforeRelease[0]]),
+  );
   const firstRelease = getReleaseObject("0.1.0", commitsBeforeRelease);
   const secondRelease = getReleaseObject("1.0.0", commitsAfterRelease);
   const withFixes = getReleaseObject("1.0.0", [
