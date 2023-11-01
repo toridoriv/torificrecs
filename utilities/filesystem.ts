@@ -1,7 +1,7 @@
 export { type WalkOptions } from "std/fs/mod.ts";
 import { Diff } from "@utilities/types.ts";
 import { deepMerge } from "std/collections/deep_merge.ts";
-import { type WalkEntry, type WalkOptions, walkSync } from "std/fs/mod.ts";
+import { existsSync, type WalkEntry, type WalkOptions, walkSync } from "std/fs/mod.ts";
 
 const GET_PATHS_DEFAULTS = {
   includeDirs: false,
@@ -20,7 +20,7 @@ export function getFilePaths(
 }
 
 const GET_PUBLIC_PATHS_DEFAULTS = {
-  skip: [/_/],
+  skip: [/_/, /\.test/, /\.seeds/],
 };
 
 export function getPublicFilePaths(dir: string, options: PathRetrievalOptions = {}) {
@@ -35,4 +35,12 @@ export function getEntryPath(entry: WalkEntry) {
 
 export function addNamespacePrefix(path: string) {
   return `@${path}`;
+}
+
+export function createDirectory(path: string) {
+  if (!existsSync(path)) {
+    Deno.mkdirSync(path, { recursive: true });
+  }
+
+  return;
 }

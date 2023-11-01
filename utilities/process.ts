@@ -1,3 +1,5 @@
+import { mainLogger } from "@utilities/logger.ts";
+import ansicolors from "ansi-colors";
 import { existsSync } from "std/fs/exists.ts";
 import { dirname } from "std/path/dirname.ts";
 
@@ -14,6 +16,9 @@ export class SubprocessError extends Error {
 
 export function executeCommand(main: string, options?: Deno.CommandOptions) {
   const command = new Deno.Command(main, options);
+
+  mainLogger.debug(`Executing command: \n  ${formatStringCommand(main, options?.args)}`);
+
   const { code, stdout, stderr } = command.outputSync();
 
   if (code !== 0) {
@@ -29,4 +34,12 @@ export function touch(filepath: string) {
   if (existsSync(dir)) {
     executeCommand("touch", { args: [filepath] });
   }
+}
+
+function formatStringCommand(command: string, args: string[] = []) {
+  const prompt = ansicolors.greenBright("$");
+  const cmd = ansicolors.greenBright.bold(command);
+  const opts = ansicolors.white(args.join(" "));
+
+  return ansicolors.bgBlack(`${prompt} ${cmd} ${opts}`);
 }

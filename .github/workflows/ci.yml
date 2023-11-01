@@ -1,6 +1,11 @@
 name: ♾️ Continuous Integration
 
-on: [push, pull_request]
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    types: [opened, edited]
 
 env:
   ENVIRONMENT: DEVELOPMENT

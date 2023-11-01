@@ -15,10 +15,24 @@
     "useTabs": false
   },
   "importMap": "./import-map.json",
+  "lint": {
+    "rules": {
+      "exclude": [
+        "no-namespace"
+      ]
+    }
+  },
   "tasks": {
+    "coverage": "deno coverage --unstable .coverage",
+    "coverage:clean": "rm -rf .coverage",
+    "deploy": "deployctl deploy --project=torificrecs --exclude=.git,node_modules,.env,.tmp,bin,.github,prettier-config.mjs",
+    "deploy:preview": "deno task deploy main.ts",
+    "deploy:prod": "deno task deploy --prod main.ts",
     "format": "deno fmt --unstable --config=deno.json",
     "format:check": "deno task format --check",
     "lint": "deno lint --unstable --config=deno.json",
-    "test": "deno test --allow-all --unstable --allow-none --config=deno.json"
+    "manage": "deno run --allow-all bin/manage.ts",
+    "test": "ENV_FILE=.env.test deno test --allow-all --unstable --config=deno.json",
+    "test:cov": "deno task test --coverage=.coverage"
   }
 }

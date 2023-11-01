@@ -79,4 +79,20 @@ export type ExpandRecursively<T, Unless = null> = T extends object
   : never
   : T;
 
+/**
+ * Returns a type that represents the difference between two types T1 and T2.
+ * It omits the keys in T2 from T1.
+ */
 export type Diff<T1, T2> = Expand<Omit<T1, keyof T2>>;
+
+/**
+ * Makes all properties in T optional.
+ */
+export type DeepPartial<T> = T extends NativeObject ? T
+  : T extends AnyRecord ? {
+      [P in keyof T]?: DeepPartial<T[P]>;
+    }
+  : T;
+
+// deno-lint-ignore ban-types
+type NativeObject = Date | String | Number | Function;

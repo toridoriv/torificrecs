@@ -1,0 +1,16 @@
+import { Command } from "cliffy/command/mod.ts";
+
+const {{constName}}Command = new Command()
+  .name("{{name}}")
+  .description("{{description}}")
+  .action(runAction);
+
+if (import.meta.main) {
+  {{constName}}Command.parse(Deno.args);
+}
+
+export default {{constName}}Command;
+
+function runAction(this: typeof {{constName}}Command) {
+  this.showHelp();
+}
