@@ -1,17 +1,19 @@
 {
   "imports": {
     "@bin/": "./bin/",
+    "@components/": "./app/components/",
     "@config": "./config.ts",
+    "@pages/": "./app/pages/",
     "@routes/": "./routes/",
     "@utilities/": "./utilities/",
     "ansi-colors": "https://esm.sh/ansi-colors@4.1.3",
-    "chai": "https://esm.sh/chai@4.3.10?keep-names?deno-std=0.204.0?target=deno?bundle",
+    "chai": "https://esm.sh/chai@4.3.10?keep-names?deno-std=0.205.0?target=deno?bundle",
     "cliffy/": "https://deno.land/x/cliffy@v1.0.0-rc.3/",
     "express": "https://deno.land/x/express_deno@v1.0.4/mod.ts",
-    "express-handlebars": "https://esm.sh/express-handlebars@7.1.2?keep-names?deno-std=0.204.0?target=deno?bundle",
-    "faker": "https://esm.sh/@faker-js/faker@8.2.0?keep-names?deno-std=0.204.0?target=deno?bundle",
-    "mustache": "https://esm.sh/mustache@4.2.0?keep-names?deno-std=0.204.0?target=deno?bundle",
-    "std/": "https://deno.land/std@0.204.0/",
+    "express-handlebars": "https://esm.sh/express-handlebars@7.1.2?keep-names?deno-std=0.205.0?target=deno?bundle",
+    "faker": "https://esm.sh/@faker-js/faker@8.2.0?keep-names?deno-std=0.205.0?target=deno?bundle",
+    "mustache": "https://esm.sh/mustache@4.2.0?keep-names?deno-std=0.205.0?target=deno?bundle",
+    "std/": "https://deno.land/std@0.205.0/",
     "zod": "https://deno.land/x/zod@v3.22.4/mod.ts"
   },
   "scopes": {}

@@ -20,6 +20,70 @@ export function defineRouteHandlers<O extends Route.HandlersOptions>() {
 
 /**
  * @internal
+ * Creates an Express router from the provided route mapping.
+ *
+ * @param mapping - The route mapping to generate the router for.
+ * @param options - Options to pass to the Express router.
+ * @returns The configured Express router instance.
+ */
+export function createRouter(
+  mapping: Route.Mapping,
+  options: express.RouterOptions = {},
+) {
+  const router = express.Router(options);
+
+  for (const path in mapping) {
+    const routeHandlers = mapping[path];
+
+    for (const _ in routeHandlers) {
+      const method = _ as Route.Method;
+      const handlers = (
+        Array.isArray(routeHandlers[method])
+          ? routeHandlers[method]
+          : [routeHandlers[method]]
+      ) as Route.Handler[];
+
+      router[method](path, ...handlers);
+    }
+  }
+
+  return router;
+}
+
+/**
+ * Checks if the given value is a route error handler function.
+ *
+ * @returns `true` if value is a function with 4 arguments (error handler signature)
+ * or if the function name includes "NotFound". Otherwise returns `false`.
+ */
+export function isErrorRouteHandler(
+  value: unknown,
+): value is Route.ErrorHandler {
+  if (typeof value !== "function") {
+    return false;
+  }
+
+  return value.length === 4 || value.name.includes("NotFound");
+}
+
+/**
+ * Checks if the given value is a happy route handler function.
+ *
+ * @returns `true` if the value is a function with 3 arguments (happy handler signature)
+ * and its name does not include "NotFound". Otherwise returns `false`.
+ */
+export function isHappyRouteHandler(
+  value: unknown,
+): value is Route.HappyHandler {
+  if (typeof value !== "function") {
+    return false;
+  }
+
+  return value.length === 3 && !value.name.includes("NotFound");
+}
+
+/**
+ * @internal
  */
 export function getRoutesPaths() {
   return getFilePaths("./routes", {
