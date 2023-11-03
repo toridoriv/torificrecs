@@ -5,6 +5,7 @@ import {
   PathRetrievalOptions,
 } from "@utilities/filesystem.ts";
 import { mainLogger } from "@utilities/logger.ts";
+import { compareAlphabetically } from "@utilities/string.ts";
 import { SafeAny } from "@utilities/types.ts";
 import { Command } from "cliffy/command/mod.ts";
 import Mustache from "mustache";
@@ -33,7 +34,9 @@ export async function registerCommands(
   dir: string,
   options: PathRetrievalOptions = {},
 ) {
-  const paths = getPublicFilePaths(dir, options).map(addNamespacePrefix);
+  const paths = getPublicFilePaths(dir, options)
+    .map(addNamespacePrefix)
+    .sort(compareAlphabetically);
 
   for (let i = 0; i < paths.length; i++) {
     const { default: command } = await import(paths[i]);

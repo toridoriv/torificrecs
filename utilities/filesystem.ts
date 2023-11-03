@@ -8,13 +8,17 @@ const GET_PATHS_DEFAULTS = {
   includeFiles: true,
 };
 
+export const _dependencies = {
+  walkSync,
+};
+
 export type PathRetrievalOptions = Diff<WalkOptions, typeof GET_PATHS_DEFAULTS>;
 
 export function getFilePaths(
   dir: string,
   options: PathRetrievalOptions = {},
 ) {
-  const entries = walkSync(dir, { ...GET_PATHS_DEFAULTS, ...options });
+  const entries = _dependencies.walkSync(dir, { ...GET_PATHS_DEFAULTS, ...options });
 
   return [...entries].map(getEntryPath);
 }
@@ -43,4 +47,8 @@ export function createDirectory(path: string) {
   }
 
   return;
+}
+
+export function toRelativePath(path: string) {
+  return `./${path}`;
 }
