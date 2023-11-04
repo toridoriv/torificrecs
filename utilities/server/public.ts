@@ -16,6 +16,24 @@ const CONTENT_TYPE_BY_FILE_EXTENSION = {
 
 const ONE_MONTH = 30 * 24 * 60 * 60;
 
+export const _internals = {
+  getFileExtension,
+  getHandler,
+  readFileSync,
+};
+
+/**
+ * Creates an Express router to serve static assets.
+ *
+ * Gets a list of all files in the provided directory, converts the file paths
+ * to route handler options using `toHandlerOptions`, and registers a GET route
+ * for each path.
+ *
+ * This allows serving static assets directly from the file system.
+ *
+ * @param dir - The directory containing the static assets.
+ * @returns An Express router instance to serve the static assets.
+ */
 export function createAssetsRouter(dir: string) {
   const router = express.Router();
   const assets = getFilePaths(dir).map(toRelativePath)
@@ -28,14 +46,29 @@ export function createAssetsRouter(dir: string) {
   return router;
 }
 
-function toHandlerOptions(dir: string, path: string) {
-  const content = Deno.readFileSync(path);
-  const ext = getFileExtension(path);
+/**
+ * Converts a file path to handler options used for routing.
+ *
+ * The handler serves the content with the correct content type
+ * and sets cache headers.
+ *
+ * @param dir - The directory containing the assets.
+ * @param path - The file path to convert.
+ * @returns The handler options object.
+ * @internal
+ */
+export function toHandlerOptions(dir: string, path: string) {
+  const content = _internals.readFileSync(path);
+  const ext = _internals.getFileExtension(path);
 
   return {
     path: getRouteUrlFromFilePath(path.replace(dir, "")),
     handler: getHandler(ext, content),
   };
+}
+
+function readFileSync(path: string | URL) {
+  return Deno.readFileSync(path);
 }
 
 function getHandler(

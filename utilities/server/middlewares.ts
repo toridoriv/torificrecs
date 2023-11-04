@@ -1,12 +1,23 @@
 import { addNamespacePrefix, getFilePaths } from "@utilities/filesystem.ts";
-import { isErrorRouteHandler, isHappyRouteHandler } from "@utilities/server/routes.ts";
+import { isRouteErrorHandler, isRouteHappyHandler } from "@utilities/server/routes.ts";
 import { mapValues } from "std/collections/map_values.ts";
+
+export function defineMiddleware<O extends Route.HandlersOptions>(
+  handler: Route.HappyHandler<O>,
+  priority: number,
+): Middlewares.Middleware<O>;
+
+export function defineMiddleware<O extends Route.HandlersOptions>(
+  handler: Route.ErrorHandler<O>,
+  priority: number,
+): Middlewares.Middleware<O>;
+
 /**
  * Defines a middleware handler by assigning it a priority property.
  * This allows middleware to be sorted by priority order.
  */
-export function defineMiddleware<O extends Route.HandlersOptions>(
-  handler: Route.HappyHandler<O>,
+export function defineMiddleware(
+  handler: Route.Handler,
   priority: number,
 ) {
   Object.defineProperty(handler, "priority", {
@@ -14,7 +25,7 @@ export function defineMiddleware<O extends Route.HandlersOptions>(
     enumerable: true,
   });
 
-  return handler as Middlewares.Middleware<O>;
+  return handler;
 }
 
 /**
@@ -37,7 +48,7 @@ export function isMiddlewareHandler(
   value: unknown,
 ): value is Middlewares.Middleware {
   return (
-    isHappyRouteHandler(value) &&
+    isRouteHappyHandler(value) &&
     typeof (value as Middlewares.Middleware)?.priority === "number"
   );
 }
@@ -52,7 +63,7 @@ export function isErrorMiddlewareHandler(
   value: unknown,
 ): value is Middlewares.ErrorMiddleware {
   return (
-    isErrorRouteHandler(value) &&
+    isRouteErrorHandler(value) &&
     typeof (value as Middlewares.ErrorMiddleware)?.priority === "number"
   );
 }
@@ -72,6 +83,13 @@ export function compareByPriority(
   return handler1.priority - handler2.priority;
 }
 
+/**
+ * Filters the given middleware map to only happy middlewares,
+ * sorts them by priority, and returns the filtered map.
+ *
+ * @param map - The middleware map to filter and sort.
+ * @returns A new map with only the happy middlewares, sorted by priority.
+ */
 export function getHappyMiddlewares(map: Middlewares.Mapping) {
   return mapValues(
     map,
@@ -79,6 +97,13 @@ export function getHappyMiddlewares(map: Middlewares.Mapping) {
   );
 }
 
+/**
+ * Filters the given middleware map to only error middlewares,
+ * sorts them by priority, and returns the filtered map.
+ *
+ * @param map - The middleware map to filter and sort.
+ * @returns A new map with only the error middlewares, sorted by priority.
+ */
 export function getErrorMiddlewares(map: Middlewares.Mapping) {
   return mapValues(
     map,

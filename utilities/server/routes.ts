@@ -13,13 +13,14 @@ import type { ExpressHandlebars } from "express-handlebars";
  * @returns A function that accepts and returns the route handlers.
  */
 export function defineRouteHandlers<O extends Route.HandlersOptions>() {
-  return function <Handlers extends Route.Handlers<O>>(handlers: Handlers) {
+  return function initRouteHandlers<Handlers extends Route.Handlers<O>>(
+    handlers: Handlers,
+  ) {
     return handlers;
   };
 }
 
 /**
- * @internal
  * Creates an Express router from the provided route mapping.
  *
  * @param mapping - The route mapping to generate the router for.
@@ -56,7 +57,7 @@ export function createRouter(
  * @returns `true` if value is a function with 4 arguments (error handler signature)
  * or if the function name includes "NotFound". Otherwise returns `false`.
  */
-export function isErrorRouteHandler(
+export function isRouteErrorHandler(
   value: unknown,
 ): value is Route.ErrorHandler {
   if (typeof value !== "function") {
@@ -72,18 +73,20 @@ export function isErrorRouteHandler(
  * @returns `true` if the value is a function with 3 arguments (happy handler signature)
  * and its name does not include "NotFound". Otherwise returns `false`.
  */
-export function isHappyRouteHandler(
+export function isRouteHappyHandler(
   value: unknown,
 ): value is Route.HappyHandler {
   if (typeof value !== "function") {
     return false;
   }
 
-  return value.length === 3 && !value.name.includes("NotFound");
+  return value.length === 3 && !value.name?.includes("NotFound");
 }
 
 /**
- * @internal
+ * Retrieves all route handler file paths from the routes directory.
+ *
+ * @returns Array of namespace-prefixed paths to route handler modules.
  */
 export function getRoutesPaths() {
   return getFilePaths("./routes", {
@@ -210,10 +213,19 @@ declare global {
       render: RenderFn;
     }
 
+    /**
+     * Options for rendering a view template.
+     */
     type RenderViewOptions = Expand<
       Parameters<ExpressHandlebars["renderView"]>[1]
     >;
 
+    /**
+     *  Type for the render function on the route {@link Route.Response} object.
+     *
+     * @param name - The name of the view template.
+     * @param options - Optional view render options.
+     */
     type RenderFn = (name: string, options?: RenderViewOptions) => void;
   }
 }

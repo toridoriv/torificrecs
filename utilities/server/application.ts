@@ -1,3 +1,5 @@
+import "@utilities/server/manifest.ts";
+
 import { Logger } from "@utilities/logger.ts";
 import {
   getErrorMiddlewares,
@@ -13,19 +15,47 @@ import { deepMerge } from "std/collections/deep_merge.ts";
 declare global {
   namespace Express {
     interface Application {
+      /**
+       * The Express Handlebars instance used for rendering views.
+       */
       hbs: ExpressHandlebars;
+      /**
+       * The logger instance registered in the Express application.
+       */
       logger: Logger;
     }
   }
 
   namespace Server {
+    /**
+     * Configuration options for the Express Handlebars view engine.
+     * It extends the required properties from the {@link ExpressHandlebars} config interface.
+     */
     type ViewEngineConfig = Expand<Required<ExpressHandlebars["config"]>>;
 
+    /**
+     * The Settings interface defines the configuration options for initializing the Express application.
+     */
     interface Settings {
+      /**
+       * The server manifest containing routes, middlewares, base URL, etc.
+       */
       manifest: Server.Manifest;
+      /**
+       * The logger instance to use.
+       */
       logger: Logger;
+      /**
+       * The default locals to make available in all views.
+       */
       locals: express.Locals;
+      /**
+       * Optional router configuration.
+       */
       router?: express.RouterOptions;
+      /**
+       * Optional view engine configuration.
+       */
       views?: Partial<ViewEngineConfig>;
     }
   }
@@ -41,7 +71,14 @@ const DEFAULT_ENGINE_CONFIG: MakeOptional<
   helpers: {},
 };
 
-export function initApplication<L>(settings: Server.Settings) {
+/**
+ * Initializes an Express application instance with the provided settings.
+ * Configures the view engine, routers, middleware mappings, and locals.
+ *
+ * @param settings
+ * @returns The initialized app instance.
+ */
+export function initApplication(settings: Server.Settings) {
   const app = express();
   const engineConfig = deepMerge(DEFAULT_ENGINE_CONFIG, settings.views || {});
   const hbs = create(engineConfig);

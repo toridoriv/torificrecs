@@ -1,8 +1,8 @@
+import { ErrorPage } from "@pages/error-page.ts";
 import { buildTag } from "@utilities/html.ts";
 import { defineMiddleware } from "@utilities/server/middlewares.ts";
 import { difference } from "std/datetime/difference.ts";
 import { Status, STATUS_TEXT } from "std/http/status.ts";
-import { ErrorPage } from "../app/pages/error-page.ts";
 
 const inspectRequest = defineMiddleware(function inspectRequest(
   req,
@@ -51,9 +51,15 @@ export default [inspectRequest, handleNotFound];
 declare global {
   namespace Express {
     interface Request {
+      /**
+       * The request ID, generated as a random UUID.
+       */
       id: string;
     }
     interface Response {
+      /**
+       * The response duration in milliseconds.
+       */
       duration: number;
     }
   }
