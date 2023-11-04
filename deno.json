@@ -23,7 +23,7 @@
     }
   },
   "tasks": {
-    "coverage": "deno coverage --unstable .coverage",
+    "coverage": "deno coverage --unstable --exclude='test\\.(js|mjs|ts|jsx|tsx)$|logger\\.' .coverage",
     "coverage:clean": "rm -rf .coverage",
     "deploy": "deployctl deploy --project=torificrecs --exclude=.git,node_modules,.env,.tmp,bin,.github,prettier-config.mjs,.coverage",
     "deploy:preview": "deno task deploy main.ts",
