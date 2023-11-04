@@ -42,6 +42,7 @@ const application = initApplication({
 
 const server = application.listen(3000, handleListening);
 
+// deno-lint-ignore require-await
 async function handleListening() {
   mainLogger.info("listening");
 }
@@ -51,11 +52,8 @@ server.on("close", handleClose);
 Deno.addSignalListener("SIGTERM", handleKillSignal);
 Deno.addSignalListener("SIGINT", handleKillSignal);
 
+// deno-lint-ignore require-await
 async function handleClose() {
-  // if (database.isConnected) {
-  //   await database.close();
-  // }
-
   application.logger.info("Shutting down application.");
 }
 
