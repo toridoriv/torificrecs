@@ -6,6 +6,7 @@ import {
 } from "@bin/_helpers.ts";
 import { getMiddlewarePaths } from "@utilities/server/middlewares.ts";
 import { getRoutesPaths, getRouteUrlFromFilePath } from "@utilities/server/routes.ts";
+import { compareAlphabetically } from "@utilities/string.ts";
 import ansicolors from "ansi-colors";
 import { Command } from "cliffy/command/mod.ts";
 
@@ -54,7 +55,11 @@ function runAction(options: AddManifestCommandOptions) {
     middlewares.push(`"${url}": ${importName}`);
   }
 
-  const manifest = renderTemplate(MANIFEST_TEMPLATE, { imports, routes, middlewares });
+  const manifest = renderTemplate(MANIFEST_TEMPLATE, {
+    imports: imports.sort(compareAlphabetically),
+    routes,
+    middlewares,
+  });
 
   if (options.dryRun) {
     logger.debug(ansicolors.underline("MANIFEST:"));
