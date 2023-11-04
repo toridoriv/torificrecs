@@ -1,10 +1,10 @@
+import { stubRetrieveFirstCommit } from "@utilities/__test-utils__.ts";
 import {
   createCommit,
   createReleaseCommit,
   getGitLogOutput,
 } from "@utilities/git.seeds.ts";
 import {
-  _internals,
   compareCommitsByTimestamp,
   extractVersionFromCommit,
   getCommitLabel,
@@ -12,8 +12,7 @@ import {
   parseGitLogOutput,
 } from "@utilities/git.ts";
 import { expect } from "chai";
-import { describe, it } from "std/testing/bdd.ts";
-import { returnsNext, stub } from "std/testing/mock.ts";
+import { afterAll, describe, it } from "std/testing/bdd.ts";
 
 describe("function parseGitLogOutput", () => {
   const commits = Array.from({ length: 4 }, () => createCommit());
@@ -152,6 +151,10 @@ describe("function getCommitLabel", () => {
 
     expect(groups).to.eql(["Miscellaneous", "Miscellaneous", "Miscellaneous"]);
   });
+
+  it("should throw if the commit subject doesn't contain an emoji", () => {
+    expect(getCommitLabel.bind(null, "I have no emoji")).to.throw("No emoji found :(");
+  });
 });
 
 describe("function extractVersionFromCommit", () => {
@@ -173,11 +176,15 @@ describe("function getReleaseObject", () => {
     createReleaseCommit("0.1.0"),
   ];
 
-  stub(
-    _internals,
-    "retrieveFirstCommit",
-    returnsNext([commitsBeforeRelease[0], commitsBeforeRelease[0]]),
+  const retrieveFirstCommitStub = stubRetrieveFirstCommit(
+    2,
+    commitsBeforeRelease[0],
+    commitsBeforeRelease[0],
   );
+
+  afterAll(() => {
+    retrieveFirstCommitStub.restore();
+  });
 
   const firstRelease = getReleaseObject("0.1.0", commitsBeforeRelease);
   const secondRelease = getReleaseObject("1.0.0", commitsAfterRelease);
