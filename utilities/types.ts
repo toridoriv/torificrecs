@@ -94,5 +94,9 @@ export type DeepPartial<T> = T extends NativeObject ? T
     }
   : T;
 
+export type MakeOptional<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
+
+export type MakeRequired<T, K extends keyof T> = Required<Pick<T, K>> & Omit<T, K>;
+
 // deno-lint-ignore ban-types
 type NativeObject = Date | String | Number | Function;
