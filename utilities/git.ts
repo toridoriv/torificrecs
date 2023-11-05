@@ -17,7 +17,7 @@ const commitFormat = {
   ref: "%D",
 };
 
-const CommitSchema = z
+export const CommitSchema = z
   .object({
     /**
      * The commit hash.

@@ -5,6 +5,7 @@ import {
   getGitLogOutput,
 } from "@utilities/git.seeds.ts";
 import {
+  CommitSchema,
   compareCommitsByTimestamp,
   extractVersionFromCommit,
   getCommitLabel,
@@ -58,11 +59,10 @@ describe("function getCommitLabel", () => {
       ":sparkles: Message",
       ":tada: (scope) Message",
       ":construction_worker: (scope) Message (#1)",
-      "✨ Message",
     ];
     const groups = commits.map(getCommitLabel);
 
-    expect(groups).to.eql(["Added", "Added", "Added", "Added"]);
+    expect(groups).to.eql(["Added", "Added", "Added"]);
   });
 
   it("should return `Changed` if the commit subject includes an emoji belonging to that group", () => {
@@ -70,11 +70,10 @@ describe("function getCommitLabel", () => {
       ":art: Message",
       ":bento: (scope) Message",
       ":building_construction: (scope) Message (#1)",
-      "🍱 (scope) Message",
     ];
     const groups = commits.map(getCommitLabel);
 
-    expect(groups).to.eql(["Changed", "Changed", "Changed", "Changed"]);
+    expect(groups).to.eql(["Changed", "Changed", "Changed"]);
   });
 
   it("should return `Breaking Changes` if the commit subject includes an emoji belonging to that group", () => {
@@ -204,6 +203,27 @@ describe("function getReleaseObject", () => {
 
   it("should push each commit into its corresponding commit group", () => {
     expect(withFixes.changes.Fixed.commits.length).to.equal(1);
+  });
+});
+
+describe("object CommitSchema", () => {
+  const rawCommit = {
+    "hash": "46f84dae51dc3e59c431cb26f67fdb12aea08ce7",
+    "id": "46f84da",
+    "timestamp": "1699117871",
+    "author": { "name": "Victoria Rodriguez", "email": "vrodriguezfe@icloud.com" },
+    "subject": "✨ Implement setup server (#5) (#6)",
+    "body": "",
+    "ref": "",
+  };
+  const commit = CommitSchema.parse(rawCommit);
+
+  it("should correctly parse a date in the timestamp field", () => {
+    expect(commit.timestamp).to.be.instanceof(Date);
+  });
+
+  it("should correctly convert emojis to codes in its subject field", () => {
+    expect(commit.subject).to.equal(":sparkles: Implement setup server (#5) (#6)");
   });
 });
 
