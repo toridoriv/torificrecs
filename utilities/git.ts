@@ -1,6 +1,7 @@
 import { DEFAULT_EMOJI_GROUP, EMOJI_MAP } from "@utilities/git.data.ts";
 import { executeCommand } from "@utilities/process.ts";
 import { Expand } from "@utilities/types.ts";
+import { unemojify } from "emoji";
 import { z } from "zod";
 
 const commitFormat = {
@@ -16,39 +17,41 @@ const commitFormat = {
   ref: "%D",
 };
 
-const CommitSchema = z.object({
-  /**
-   * The commit hash.
-   */
-  hash: z.string(),
-  /**
-   * The commit ID - the short hash.
-   */
-  id: z.string(),
-  /**
-   * The commit timestamp.
-   */
-  timestamp: z.preprocess(parseDate, z.date()),
-  /**
-   * The author of the commit, containing their name and email address.
-   */
-  author: z.object({
-    name: z.string(),
-    email: z.string(),
-  }),
-  /**
-   * The commit subject line.
-   */
-  subject: z.string(),
-  /**
-   * The commit message body.
-   */
-  body: z.string(),
-  /**
-   * The commit reference - the branch or tag name.
-   */
-  ref: z.string(),
-});
+const CommitSchema = z
+  .object({
+    /**
+     * The commit hash.
+     */
+    hash: z.string(),
+    /**
+     * The commit ID - the short hash.
+     */
+    id: z.string(),
+    /**
+     * The commit timestamp.
+     */
+    timestamp: z.preprocess(parseDate, z.date()),
+    /**
+     * The author of the commit, containing their name and email address.
+     */
+    author: z.object({
+      name: z.string(),
+      email: z.string(),
+    }),
+    /**
+     * The commit subject line.
+     */
+    subject: z.string(),
+    /**
+     * The commit message body.
+     */
+    body: z.string(),
+    /**
+     * The commit reference - the branch or tag name.
+     */
+    ref: z.string(),
+  })
+  .transform(parseSubject);
 
 /**
  * The Commit type, which represents a parsed Git commit.
@@ -147,7 +150,10 @@ export function getCommitLabel(subject: string): CommitLabel {
  * @param previous - The previous release version string, if available
  * @returns An object representing the release with default values
  */
-export function initReleaseObject(version: string, previous = ""): ReleaseObject {
+export function initReleaseObject(
+  version: string,
+  previous = "",
+): ReleaseObject {
   return {
     version,
     tag: `v${version}`,
@@ -289,4 +295,10 @@ function parseDate(date: unknown) {
   }
 
   return date;
+}
+
+function parseSubject<T extends { subject: string }>(commit: T) {
+  commit.subject = unemojify(commit.subject);
+
+  return commit;
 }

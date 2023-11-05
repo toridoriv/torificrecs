@@ -58,10 +58,11 @@ describe("function getCommitLabel", () => {
       ":sparkles: Message",
       ":tada: (scope) Message",
       ":construction_worker: (scope) Message (#1)",
+      "✨ Message",
     ];
     const groups = commits.map(getCommitLabel);
 
-    expect(groups).to.eql(["Added", "Added", "Added"]);
+    expect(groups).to.eql(["Added", "Added", "Added", "Added"]);
   });
 
   it("should return `Changed` if the commit subject includes an emoji belonging to that group", () => {
@@ -69,10 +70,11 @@ describe("function getCommitLabel", () => {
       ":art: Message",
       ":bento: (scope) Message",
       ":building_construction: (scope) Message (#1)",
+      "🍱 (scope) Message",
     ];
     const groups = commits.map(getCommitLabel);
 
-    expect(groups).to.eql(["Changed", "Changed", "Changed"]);
+    expect(groups).to.eql(["Changed", "Changed", "Changed", "Changed"]);
   });
 
   it("should return `Breaking Changes` if the commit subject includes an emoji belonging to that group", () => {
