@@ -5,6 +5,7 @@ import {
   getGitLogOutput,
 } from "@utilities/git.seeds.ts";
 import {
+  CommitSchema,
   compareCommitsByTimestamp,
   extractVersionFromCommit,
   getCommitLabel,
@@ -202,6 +203,27 @@ describe("function getReleaseObject", () => {
 
   it("should push each commit into its corresponding commit group", () => {
     expect(withFixes.changes.Fixed.commits.length).to.equal(1);
+  });
+});
+
+describe("object CommitSchema", () => {
+  const rawCommit = {
+    "hash": "46f84dae51dc3e59c431cb26f67fdb12aea08ce7",
+    "id": "46f84da",
+    "timestamp": "1699117871",
+    "author": { "name": "Victoria Rodriguez", "email": "vrodriguezfe@icloud.com" },
+    "subject": "✨ Implement setup server (#5) (#6)",
+    "body": "",
+    "ref": "",
+  };
+  const commit = CommitSchema.parse(rawCommit);
+
+  it("should correctly parse a date in the timestamp field", () => {
+    expect(commit.timestamp).to.be.instanceof(Date);
+  });
+
+  it("should correctly convert emojis to codes in its subject field", () => {
+    expect(commit.subject).to.equal(":sparkles: Implement setup server (#5) (#6)");
   });
 });
 
