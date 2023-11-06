@@ -64,6 +64,6 @@ describe("function getCurrentVersion", () => {
   const currentVersion = getCurrentVersion();
 
   it("should create a version object based on the current version of this project", () => {
-    expect(currentVersion.version).to.equal(config.project.version);
+    expect(currentVersion.version).to.equal(config.version);
   });
 });
