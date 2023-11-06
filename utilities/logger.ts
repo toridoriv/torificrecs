@@ -1,4 +1,3 @@
-import { config } from "@config";
 import { LoggerConfig } from "@utilities/logger.config.ts";
 import type { SafeAny } from "@utilities/types.ts";
 import ansicolors from "ansi-colors";
@@ -9,7 +8,7 @@ import {
   isInformationalStatus,
   isRedirectStatus,
   isSuccessfulStatus,
-} from "std/http/mod.ts";
+} from "std/http/status.ts";
 
 namespace LogObject {
   export type Error = {
@@ -450,10 +449,3 @@ export class Logger extends BaseLogger {
     Object.setPrototypeOf(this, parent.prototype);
   }
 }
-
-export const mainLogger = new Logger({
-  severity: config.logger.severity,
-  mode: config.logger.format,
-  application: config.project.name,
-  environment: config.environment,
-});

@@ -1,7 +1,9 @@
-import { mainLogger } from "@utilities/logger.ts";
+import { mainLogger } from "@app-logger";
 import ansicolors from "ansi-colors";
 import { existsSync } from "std/fs/exists.ts";
 import { dirname } from "std/path/dirname.ts";
+
+const logger = mainLogger.getSubLogger({ module: "process" });
 
 export class SubprocessError extends Error {
   constructor(name: string, output: Uint8Array, args?: string[]) {
@@ -17,7 +19,7 @@ export class SubprocessError extends Error {
 export function executeCommand(main: string, options?: Deno.CommandOptions) {
   const command = new Deno.Command(main, options);
 
-  mainLogger.debug(`Executing command: \n  ${formatStringCommand(main, options?.args)}`);
+  logger.debug(`Executing command: \n  ${formatStringCommand(main, options?.args)}`);
 
   const { code, stdout, stderr } = command.outputSync();
 

@@ -1,4 +1,4 @@
-import type { Diff } from "@utilities/types.ts";
+import type { DeepDiff, Diff } from "@utilities/types.ts";
 import { describe, it } from "std/testing/bdd.ts";
 import { assertType, type IsExact } from "std/testing/types.ts";
 
@@ -15,8 +15,43 @@ describe("type Diff", () => {
     };
 
     type OptionsDiff = Diff<Options, DefaultOptions>;
-    assertType<IsExact<OptionsDiff, { version?: string; port?: number }>>(
-      true,
-    );
+    assertType<IsExact<OptionsDiff, { version?: string; port?: number }>>(true);
+  });
+});
+
+describe("type DeepDiff", () => {
+  type User = {
+    id: number;
+    person: {
+      name: string;
+      age: number;
+      birthday: Date;
+    };
+    address: {
+      city: string;
+      zipCode: number;
+    };
+  };
+
+  it("should return a type that excludes from the first type the keys defined in the second recursively", () => {
+    assertType<
+      IsExact<
+        DeepDiff<User, { id: number }>,
+        {
+          person: { name: string; age: number; birthday: Date };
+          address: { city: string; zipCode: number };
+        }
+      >
+    >(true);
+
+    assertType<
+      IsExact<
+        DeepDiff<User, { id: number; person: { name: string } }>,
+        {
+          person: { age: number; birthday: Date };
+          address: { city: string; zipCode: number };
+        }
+      >
+    >(true);
   });
 });

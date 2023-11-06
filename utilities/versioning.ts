@@ -87,5 +87,5 @@ export class VersionObject {
  * @returns A VersionObject instance representing the current version.
  */
 export function getCurrentVersion() {
-  return new VersionObject(config.project.version);
+  return new VersionObject(config.version);
 }
