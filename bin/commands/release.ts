@@ -4,7 +4,7 @@ import {
   logger,
   renderTemplate,
 } from "@bin/_helpers.ts";
-import { config } from "@config";
+import packageJson from "@packageJson" assert { type: "json" };
 import { getReleaseObject, ReleaseObject, retrieveAllCommits } from "@utilities/git.ts";
 import { executeCommand } from "@utilities/process.ts";
 import { getCurrentVersion } from "@utilities/versioning.ts";
@@ -78,7 +78,6 @@ function getReleaseNotes(details: ReleaseObject) {
 }
 
 function getUpdatedPackageJson(version: string) {
-  const packageJson = config.project;
   packageJson.version = version;
 
   return JSON.stringify(packageJson, null, 2);
