@@ -1,10 +1,10 @@
+import { mainLogger } from "@app-logger";
 import {
   addNamespacePrefix,
   createDirectory,
   getPublicFilePaths,
   PathRetrievalOptions,
 } from "@utilities/filesystem.ts";
-import { mainLogger } from "@utilities/logger.ts";
 import { compareAlphabetically } from "@utilities/string.ts";
 import { SafeAny } from "@utilities/types.ts";
 import { Command } from "cliffy/command/mod.ts";
