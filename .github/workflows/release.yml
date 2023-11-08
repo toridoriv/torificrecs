@@ -7,6 +7,8 @@ on:
 env:
   ENVIRONMENT: DEVELOPMENT
   DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
+  ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS }}
+  ADMIN_PASSWORDS: ${{ secrets.ADMIN_PASSWORDS }}
 
 jobs:
   check-code-quality:
