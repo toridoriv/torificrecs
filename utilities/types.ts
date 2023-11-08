@@ -154,5 +154,17 @@ export type ExcludeNever<T> = {
     : T[K];
 };
 
+/**
+ * Type representing a JSON value, which can be a {@link Primitive}, `array`, or `object`.
+ */
+export type JsonValue = Primitive | JsonValue[] | {
+  [key: PropertyKey]: JsonValue;
+};
+
+/**
+ * Represents a primitive value.
+ */
+export type Primitive = string | number | null | undefined | boolean;
+
 // deno-lint-ignore ban-types
 type NativeObject = Date | String | Number | Function;

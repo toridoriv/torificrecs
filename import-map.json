@@ -9,7 +9,7 @@
     "@routes/": "./routes/",
     "@utilities/": "./utilities/",
     "ansi-colors": "https://esm.sh/ansi-colors@4.1.3",
-    "chai": "https://esm.sh/chai@4.3.10?keep-names?deno-std=0.205.0?target=deno?bundle",
+    "chai": "https://esm.sh/chai@5.0.0-alpha.2?keep-names?deno-std=0.205.0?target=deno?bundle",
     "cliffy/": "https://deno.land/x/cliffy@v1.0.0-rc.3/",
     "denon": "https://deno.land/x/denon@2.5.0/mod.ts",
     "emoji": "https://deno.land/x/emoji@0.3.0/mod.ts",

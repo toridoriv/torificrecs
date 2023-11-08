@@ -1,4 +1,9 @@
-import { executeCommand, SubprocessError, touch } from "@utilities/process.ts";
+import {
+  executeCommand,
+  executeCommandAsync,
+  SubprocessError,
+  touch,
+} from "@utilities/process.ts";
 import { expect } from "chai";
 import { existsSync } from "std/fs/exists.ts";
 import { afterAll, beforeAll, describe, it } from "std/testing/bdd.ts";
@@ -11,13 +16,39 @@ describe("function executeCommand", () => {
   });
 
   it("should throw if a nonexistent command is given", () => {
-    expect(executeCommand.bind(null, "missingCommand")).to.throw(Deno.errors.NotFound);
+    expect(executeCommand.bind(null, "missingCommand")).to.throw(
+      Deno.errors.NotFound,
+    );
   });
 
   it("should throw if the given command fails", () => {
     expect(executeCommand.bind(null, "deno", { args: ["asdf"] })).to.throw(
       SubprocessError,
     );
+  });
+});
+
+describe("function executeCommandAsync", () => {
+  it("should return the output of a given command", async () => {
+    const echoHi = await executeCommandAsync("echo", { args: ["Hi!"] });
+
+    expect(echoHi).to.equal("Hi!");
+  });
+
+  it("should throw if a nonexistent command is given", async () => {
+    try {
+      await executeCommandAsync("missingCommand");
+    } catch (error) {
+      expect(error).to.be.instanceof(Deno.errors.NotFound);
+    }
+  });
+
+  it("should throw if the given command fails", async () => {
+    try {
+      await executeCommandAsync("deno", { args: ["asdf"] });
+    } catch (error) {
+      expect(error).to.be.instanceof(SubprocessError);
+    }
   });
 });
 
