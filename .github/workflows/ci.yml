@@ -9,6 +9,8 @@ on:
 
 env:
   ENVIRONMENT: DEVELOPMENT
+  ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS }}
+  ADMIN_PASSWORDS: ${{ secrets.ADMIN_PASSWORDS }}
 
 jobs:
   check-code-quality:
