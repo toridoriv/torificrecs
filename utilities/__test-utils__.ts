@@ -1,6 +1,7 @@
-import { _dependencies } from "@utilities/filesystem.ts";
+import { _dependencies, createDirectory } from "@utilities/filesystem.ts";
 import { _internals as gitInternals, type Commit } from "@utilities/git.ts";
 import { type WalkEntry } from "std/fs/walk.ts";
+import { describe } from "std/testing/bdd.ts";
 import { returnsNext, stub } from "std/testing/mock.ts";
 
 export function stubWalkSync(times = 1, ...paths: string[]) {
@@ -31,4 +32,17 @@ function* startEntryIterator(...paths: string[]) {
 
     yield entry;
   }
+}
+
+export function withTempDirectory(name: string) {
+  return describe({
+    name,
+    beforeEach(this: { dir: string }) {
+      this.dir = `.tmp/${Date.now()}`;
+      createDirectory(this.dir);
+    },
+    afterEach() {
+      Deno.removeSync(this.dir, { recursive: true });
+    },
+  });
 }

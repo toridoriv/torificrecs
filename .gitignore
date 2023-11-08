@@ -2,3 +2,4 @@ deno.lock
 .coverage
 !.vscode
 !.env.test
+.tmp
